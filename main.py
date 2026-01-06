@@ -8,6 +8,16 @@ import os
 # setup the app page using streamlit
 st.set_page_config(page_title='Automated Finance Tracker', page_icon='💰', layout='wide')
 
+# manually categorizing the transactions entered by the user.
+#NOTE: if no categories are found in the state, we are going to create 'categories' using st.session_state and name it uncategorized
+if 'categories' not in st.session_state:
+    st.session_state.categories = {'Uncategorized':[]}
+
+# Check if categories.json exist which will be used as our categories
+if os.path.exists('categories'):
+    with open('categories.json', 'r') as f:
+        st.session_state.categories = json.load(f)
+
 # method to create a data frame (table) from the uploaded csv file.
 # we will be adding additional functionalities to clean up the csv file that will allow us to modify it.
 # NOTE df.columns = selects all columns from the data frame (not each columns)
@@ -39,8 +49,21 @@ def main():
         # st.write(df) # displays the table
 
         if df is not None:
-            debit_df = df['Debit/Credit'] == 'Debit'
-            st.write(debit_df)
+            # selects a new data frame that contains only debit and credit columns from the original data frame
+            # that was returned by the load_transaction function.
+            # NOTE: basically we are selecting a specific column from our data frame using conditional into which 
+            # 'Debit/Credit column must be equals to Debit and Credit'
+            debit_df = df[df['Debit/Credit'] == 'Debit'].copy()
+            credit_df = df[df['Debit/Credit'] == 'Credit'].copy()
+           
+            # Creating tabs for the Debit and Credit transactions
+            tab1, tab2 = st.tabs(['💰 Payments Transaction', '💸 Expenses Transactions'])
+            with tab1:
+                st.header('Payments')
+                st.write(debit_df)
+            with tab2:
+                st.header('Expenses')
+                st.write(credit_df)
 
         
 
